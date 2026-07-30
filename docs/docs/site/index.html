@@ -1,1 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mehar Ali — AI &amp; Search Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--main:#2B2E6B;--main-light:#EFEFF7;--ink:#1A1A18;--paper:#FAF9F6;--accent:#E8A33D;--line:#E4E2DB;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.6;}
+  .wrap{max-width:760px;margin:0 auto;padding:72px 24px 120px;}
+  .kicker{font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#8A5A17;font-weight:500;margin-bottom:10px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:38px;margin:0 0 12px;line-height:1.2;}
+  .tagline{font-size:18px;color:#4a4a44;margin-bottom:8px;}
+  .location{font-size:14px;color:#8a8a80;margin-bottom:44px;}
+  h2{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:22px;margin:56px 0 18px;border-top:1px solid var(--line);padding-top:40px;}
+  p{margin:0 0 14px;font-size:15.5px;}
+  .card{background:white;border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin-bottom:16px;}
+  .card h3{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:17px;margin:0 0 8px;}
+  .card .meta{font-size:13px;color:#8a8a80;margin-bottom:10px;}
+  .card a.btn{display:inline-block;margin-top:6px;font-size:13.5px;font-weight:500;color:var(--main);text-decoration:none;border-bottom:1.5px solid var(--accent);padding-bottom:1px;}
+  .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .tag{font-size:11.5px;background:var(--main-light);color:var(--main);padding:3px 9px;border-radius:4px;}
+  .skills-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .skill{background:var(--main-light);border-radius:6px;padding:10px 14px;font-size:14px;}
 
+  .agent-box{background:var(--main);border-radius:12px;padding:22px 24px;color:var(--paper);}
+  .agent-box h3{font-family:'Space Grotesk',sans-serif;font-size:17px;margin:0 0 6px;}
+  .agent-box p.sub{color:#c8c9e6;font-size:13.5px;margin-bottom:16px;}
+  #chatlog{background:rgba(255,255,255,0.06);border-radius:8px;padding:14px;min-height:70px;max-height:280px;overflow-y:auto;font-size:14px;margin-bottom:12px;}
+  .msg{margin-bottom:10px;}
+  .msg.user{color:var(--accent);font-weight:500;}
+  .msg.agent{color:#EFEFF7;}
+  .inputrow{display:flex;gap:8px;}
+  #qinput{flex:1;padding:10px 12px;border-radius:6px;border:none;font-family:'Inter';font-size:14px;}
+  #askbtn{background:var(--accent);border:none;color:var(--ink);font-weight:500;padding:10px 18px;border-radius:6px;cursor:pointer;font-family:'Inter';}
+  #askbtn:disabled{opacity:0.6;cursor:default;}
+  .suggestions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .sugg{font-size:12.5px;background:rgba(255,255,255,0.1);padding:5px 10px;border-radius:12px;cursor:pointer;color:#EFEFF7;}
+
+  .footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--line);font-size:13px;color:#8a8a80;}
+  a{color:var(--main);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">Portfolio</div>
+  <h1>Mehar Ali</h1>
+  <div class="tagline">AI &amp; Machine Learning — final-year BS AI student, building search intelligence and generative AI systems</div>
+  <div class="location">Hyderabad, Sindh, Pakistan</div>
+
+  <h2>About</h2>
+  <p>I'm a final-year Artificial Intelligence student at SZABIST Hyderabad (2023–2027), currently a Generative AI intern at Arch Technologies, where I work on RAG pipelines, QLoRA fine-tuning, and Whisper speech-to-reasoning integration. Alongside that, I'm completing FlyRank's Applied Search Intelligence ML internship, where I've built and honestly validated a content-refresh prioritization model on real search data. I'm also exploring AI-assisted freelancing, building websites and tools for local Hyderabad businesses.</p>
+
+  <h2>Featured work</h2>
+  <div class="card">
+    <h3>Refresh Opportunity Scoring — Research Paper</h3>
+    <div class="meta">FlyRank ML Internship Capstone · Lane 2: Refresh / Content Opportunity Scoring</div>
+    <p>Built and honestly validated a page-ranking model on real search intelligence data, comparing a transparent baseline rule against Logistic Regression, a Decision Tree, and a Random Forest under client-holdout validation. Reported results as they actually ran — including where the baseline held its ground and where the more complex model underperformed — rather than smoothing over an inconvenient result.</p>
+    <div class="tags"><span class="tag">DuckDB</span><span class="tag">scikit-learn</span><span class="tag">Leakage auditing</span><span class="tag">Client-holdout validation</span></div>
+    <a class="btn" href="https://github.com/meharalirajar060-codeee/Flyrank_Internship_ML_MAR" target="_blank">View repo &amp; deployed paper →</a>
+  </div>
+
+  <div class="card">
+    <h3>Generative AI Internship — Arch Technologies</h3>
+    <div class="meta">April 2026 – present</div>
+    <p>RAG pipelines with Unsloth dynamic 4-bit quantization, a speech-to-reasoning pipeline pairing Whisper with a quantized LLM, and a QLoRA medical fine-tuning project — each delivered as a professional PDF report with architecture diagrams and evaluation results.</p>
+    <div class="tags"><span class="tag">RAG</span><span class="tag">QLoRA</span><span class="tag">Whisper</span></div>
+  </div>
+
+  <h2>Skills</h2>
+  <div class="skills-grid">
+    <div class="skill">Machine learning &amp; validation design</div>
+    <div class="skill">RAG &amp; fine-tuning (QLoRA)</div>
+    <div class="skill">DuckDB / SQL on data warehouses</div>
+    <div class="skill">Python (pandas, scikit-learn)</div>
+    <div class="skill">Prompt engineering</div>
+    <div class="skill">AI-assisted web development</div>
+  </div>
+
+  <h2>Ask my AI agent</h2>
+  <div class="agent-box">
+    <h3>A live agent, briefed on my work</h3>
+    <p class="sub">This is a real Claude-powered agent, not a canned FAQ — ask it anything about my background, the FlyRank capstone, or how to get in touch.</p>
+    <div id="chatlog"></div>
+    <div class="inputrow">
+      <input id="qinput" type="text" placeholder="Ask about my work, skills, or the FlyRank project...">
+      <button id="askbtn" onclick="askAgent()">Ask</button>
+    </div>
+    <div class="suggestions">
+      <span class="sugg" onclick="askPreset('What did you build for your ML capstone?')">What did you build for your ML capstone?</span>
+      <span class="sugg" onclick="askPreset('What are you looking for next?')">What are you looking for next?</span>
+      <span class="sugg" onclick="askPreset('How can I hire you for a project?')">How can I hire you?</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    Built by Mehar Ali · Portfolio site for the AI Fluency track
+  </div>
+
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are a helpful agent representing Mehar Ali on his personal portfolio site. Answer questions about him factually and concisely, in a warm, professional tone, using ONLY these facts:
+
+- Final-year BS Artificial Intelligence student at SZABIST Hyderabad (2023-2027)
+- Generative AI intern at Arch Technologies since April 2026 — works on RAG pipelines (Unsloth dynamic 4-bit quantization), Whisper speech-to-reasoning integration, and completed a QLoRA medical fine-tuning project
+- Completed the FlyRank ML Internship (Applied Search Intelligence track), Lane 2: Refresh/Content Opportunity Scoring. Built a content-refresh prioritization model on real search warehouse data. Compared a transparent baseline rule against Logistic Regression, Decision Tree, and Random Forest under client-holdout validation (grouped by client so no client's pages leaked between train and test). Results were reported honestly: a Decision Tree led on Precision@50 in the final run, the baseline rule held the best average precision of any method, and Random Forest (the most complex method) actually underperformed the baseline on that run — this instability was disclosed rather than hidden. Deployed as a public research paper with a linked GitHub repo.
+- Based in Hyderabad, Sindh, Pakistan
+- Interested in AI-assisted freelancing, particularly building websites and tools for local small businesses
+- For hiring/collaboration inquiries, suggest they reach out via the contact method Mehar provides on his site (do not invent an email address)
+
+If asked something outside these facts, say you don't have that information rather than guessing or inventing details about him. Keep answers to 2-4 sentences.`;
+
+let chatHistory = [];
+
+async function callAgent(question) {
+  const messages = [...chatHistory, { role: "user", content: question }];
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 300,
+      system: SYSTEM_PROMPT,
+      messages: messages
+    })
+  });
+  const data = await response.json();
+  const textBlock = data.content.find(b => b.type === "text");
+  const answer = textBlock ? textBlock.text : "Sorry, I couldn't generate a response.";
+  chatHistory.push({ role: "user", content: question });
+  chatHistory.push({ role: "assistant", content: answer });
+  return answer;
+}
+
+function appendMsg(text, cls) {
+  const log = document.getElementById("chatlog");
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.textContent = (cls === "user" ? "You: " : "Agent: ") + text;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function askAgent() {
+  const input = document.getElementById("qinput");
+  const btn = document.getElementById("askbtn");
+  const question = input.value.trim();
+  if (!question) return;
+  appendMsg(question, "user");
+  input.value = "";
+  btn.disabled = true;
+  btn.textContent = "...";
+  try {
+    const answer = await callAgent(question);
+    appendMsg(answer, "agent");
+  } catch (e) {
+    appendMsg("Something went wrong reaching the agent. Please try again.", "agent");
+  }
+  btn.disabled = false;
+  btn.textContent = "Ask";
+}
+
+function askPreset(q) {
+  document.getElementById("qinput").value = q;
+  askAgent();
+}
+
+document.getElementById("qinput").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") askAgent();
+});
+</script>
+</body>
+</html>
