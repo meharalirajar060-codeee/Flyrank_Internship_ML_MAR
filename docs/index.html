@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Refresh Opportunity Scoring: A Decision-Support Ranking for Content Review — Mehar Ali</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--main:#2B2E6B;--main-light:#EFEFF7;--ink:#1A1A18;--paper:#FAF9F6;--accent:#E8A33D;--line:#E4E2DB;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;line-height:1.65;}
+  .wrap{max-width:760px;margin:0 auto;padding:64px 24px 120px;}
+  .kicker{font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#8A5A17;font-weight:500;margin-bottom:10px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:34px;line-height:1.25;margin:0 0 18px;}
+  .byline{color:#8a8a80;font-size:14px;margin-bottom:48px;}
+  h2{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:22px;margin:52px 0 16px;border-top:1px solid var(--line);padding-top:36px;}
+  h3{font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:16px;margin:28px 0 10px;}
+  p{margin:0 0 16px;font-size:16px;}
+  ul,ol{margin:0 0 16px;padding-left:22px;}
+  li{margin-bottom:6px;}
+  code{font-family:monospace;background:var(--main-light);padding:1px 5px;border-radius:3px;font-size:13.5px;}
+  table{width:100%;border-collapse:collapse;font-size:14.5px;margin:16px 0;}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);}
+  th{color:#8a8a80;font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:0.03em;}
+  .callout{background:#FAF3E9;border-left:3px solid var(--accent);padding:14px 18px;font-size:15px;margin:20px 0;}
+  .abstract{background:var(--main-light);border-radius:8px;padding:22px 24px;font-size:15.5px;margin-bottom:8px;}
+  .reason-code{display:inline-block;font-family:monospace;background:var(--main);color:var(--paper);padding:2px 8px;border-radius:4px;font-size:12.5px;}
+  .footer{margin-top:60px;padding-top:28px;border-top:1px solid var(--line);font-size:13.5px;color:#8a8a80;}
+  a{color:var(--main);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">Research paper — FlyRank ML Internship, Lane 2</div>
+  <h1>Refresh Opportunity Scoring: A Decision-Support Ranking for Content Review</h1>
+  <div class="byline">Mehar Ali · FlyRank ML Internship, Applied Search Intelligence track</div>
+
+  <h2>Abstract</h2>
+  <div class="abstract">
+    <p style="margin:0;">Content teams with limited review capacity need a way to prioritize which pages to check first for refresh, but hand-written rules built on single thresholds miss most of the real opportunity. This paper builds and honestly validates several page-ranking methods on FlyRank's search intelligence warehouse, comparing a transparent baseline rule against Logistic Regression, a Decision Tree, and a Random Forest, all trained on a genuine forward-looking label (features from March, outcome measured in April). Under a client-holdout validation split, no single method won cleanly: a Decision Tree led on Precision@50 (0.76), while the baseline rule held the best average precision (0.636) of any method, including the more complex Random Forest, which underperformed the baseline on this run. These results are directional and decision-support, not proof of causal impact, and are reported with their run-to-run instability disclosed rather than smoothed over. The output is delivered as a ranked action queue with reason codes, explicit human-review requirements, and a documented no-go list for what should never be automated.</p>
+  </div>
+
+  <h2>Introduction / Problem statement</h2>
+  <p>A content reviewer with limited time cannot manually check every page on a large site. The decision this work supports is: <strong>which pages should a reviewer look at first when review capacity is limited?</strong> The unit of analysis is one content page, scored using its trailing signals, with the output being a ranked queue a human reviewer works through — the model prioritizes, it does not act.</p>
+  <p>The cost of a wrong call is asymmetric: ranking a low-value page too highly wastes a few minutes of reviewer time; missing a genuinely declining, high-traffic page and ranking it too low means a real opportunity goes unreviewed. This asymmetry shaped the evaluation metric choice below.</p>
+
+  <h2>Data</h2>
+  <p>This work uses the FlyRank ML Internship warehouse release (build <code>flyrank_pseudonymized_warehouse_release_v20260703</code>), specifically the <code>fact_content_daily_performance</code> table, joined implicitly through <code>client_hash_id</code> for grouped validation.</p>
+  <table>
+    <tr><th>Field</th><th>Value</th></tr>
+    <tr><td>Feature window</td><td><code>month = 2026-03</code> (mid-panel development month)</td></tr>
+    <tr><td>Label window</td><td><code>month = 2026-04</code> (forward-looking outcome, no overlap with features)</td></tr>
+    <tr><td>Grain</td><td>one content page, one client, one day (rolled up to one row per page per month)</td></tr>
+    <tr><td>Minimum volume filter</td><td><code>impressions_90d &gt;= 100</code>, to exclude near-zero-traffic noise</td></tr>
+  </table>
+  <p><strong>Excluded, and why:</strong> product decision fields (<code>health_score</code>, <code>priority_score</code>, <code>action_type</code>) are excluded on principle — feeding a product's own decision back in as a feature would let the model simply copy that decision rather than learn real signal. Raw query, URL, title, and client-identifying fields are excluded throughout, consistent with the release's own pseudonymization. The final month of the release (<code>_sample</code>, June 2026) was deliberately never used for feature-building or label logic, since it is the natural outcome window for any past-to-future label and using it would leak the target into development.</p>
+
+  <h2>Methodology</h2>
+  <h3>Features</h3>
+  <p>Five features, each knowable strictly before the decision point: <code>impressions_90d</code>, <code>clicks_90d</code>, <code>avg_position_90d</code>, <code>ctr_90d</code> (derived from the first two), and <code>days_since_last_seen</code> — all aggregated only from the March feature window.</p>
+  <h3>Label</h3>
+  <p>A page is labeled <em>declining</em> if its April impressions fell more than 10% relative to its March impressions — a genuine future-outcome label, deliberately different from an earlier same-window proxy (<code>trend_direction == "down"</code>) used in early exploratory work, which described the present rather than predicted the future.</p>
+  <h3>Baseline</h3>
+  <p>A transparent hand-written rule, <span class="reason-code">stale_visible_ctr_gap</span>, combining three signals confirmed against the real warehouse data before being used: staleness (pages inactive 31+ days still carry real median impressions, so staleness alone does not mean "dead page"), and the CTR-vs-position cliff (average click-through rate drops sharply from top to deep search positions, replicating an earlier finding from the starter dataset). The rule is a weighted score: 40% staleness, 30% visibility, 30% CTR gap.</p>
+  <h3>Model</h3>
+  <p>A Random Forest classifier (200 trees, max depth 6, balanced class weights), compared against Logistic Regression and a single Decision Tree as simpler references — so added complexity had to earn its place rather than win by default.</p>
+  <h3>Validation design</h3>
+  <p>Client-holdout grouped split (<code>GroupShuffleSplit</code>, grouped by <code>client_hash_id</code>): no client's pages appear in both train and test. A direct before/after comparison against a naive random split confirmed this matters — the naive split inflated every metric (AUC 0.626 vs 0.580, Precision@50 0.78 vs 0.64), because a client's other pages sitting in training let the model partially memorize client-specific patterns rather than general signal.</p>
+  <h3>Leakage audit</h3>
+  <p>Every feature was checked against five questions: was it calculated after the decision point (no); does the feature window overlap the label window (no — March features, April label); did any product-decision field slip in (no, none are present in this dataset); does a derived field secretly encode the label (no — <code>ctr_90d</code> derives only from March-only clicks and impressions); are related rows split across train/test in a way that makes the test too easy (only under the naive split, which the grouped split corrects).</p>
+
+  <h2>Results</h2>
+  <table>
+    <tr><th>Method</th><th>AUC</th><th>Avg. precision</th><th>Precision@50</th></tr>
+    <tr><td>Logistic Regression</td><td>0.530</td><td>0.592</td><td>0.66</td></tr>
+    <tr><td>Decision Tree</td><td>0.588</td><td>0.621</td><td><strong>0.76</strong></td></tr>
+    <tr><td>Random Forest</td><td>0.580</td><td>0.616</td><td>0.62</td></tr>
+    <tr><td>Baseline rule (<code>stale_visible_ctr_gap</code>)</td><td>0.571</td><td><strong>0.636</strong></td><td>0.64</td></tr>
+  </table>
+  <p>Decision Tree wins on Precision@50 in this run (0.76), followed by Logistic Regression (0.66) and the baseline rule (0.64); Random Forest, despite being the most complex method tried, underperforms the baseline here (0.62 vs 0.64). The baseline rule holds the best average precision of any method (0.636), reinforcing that a well-built, transparent rule remains a strong, honest reference point rather than something models automatically beat.</p>
+  <div class="callout">Run-to-run variation is itself a limitation worth stating plainly: an earlier, smaller-scale run of this same comparison showed Random Forest ahead on Precision@50, while this run shows Decision Tree ahead and Random Forest trailing the baseline. Results should not be reported as a fixed, guaranteed ranking of methods — this is a genuinely harder problem than an earlier same-window proxy comparison (Precision@50 0.240 → 0.740, a ~3.1x lift), and the smaller, less stable gap here reflects that the task got harder, not that any one method reliably wins.</div>
+
+  <h3>Error analysis</h3>
+  <p>Feature importances in the Random Forest were dominated by <code>ctr_90d</code> (0.52), followed by <code>clicks_90d</code> (0.20), <code>avg_position_90d</code> (0.15), and <code>impressions_90d</code> (0.13). <code>days_since_last_seen</code> carried zero importance in every run — inspection confirmed this feature has almost no variance in this slice: in the final ranked queue, every sampled page showed <code>days_since_last_seen = 0</code>, meaning nearly all pages were still active on the final day of the March window, leaving the model nothing to learn from on this feature. False negatives tended toward lower measured impressions and CTR, meaning every method tried is weakest exactly where signal volume is thinnest — consistent with a limitation already flagged in the baseline's own top-20 review.</p>
+
+  <h2>Limitations & honest framing</h2>
+  <ul>
+    <li>Validated on a single month-pair (March features → April outcome) from a client-holdout split of 35 training clients and 9 test clients — not yet tested across multiple months or seasons.</li>
+    <li>AUC is modest (0.53–0.59) across every method tried, meaning the ranking is a directional signal, not a confident probability estimate.</li>
+    <li>The staleness feature (<code>days_since_last_seen</code>) is currently underpowered due to low variance in this particular slice.</li>
+    <li>This model cannot distinguish a genuine decline from consolidation (a sibling URL absorbing traffic), seasonality, or a SERP feature change — a human reviewer must rule these out before acting on any flagged page.</li>
+    <li>No claim is made that a refresh action causes recovery — that would require a controlled experiment this data cannot provide. All findings here are observed and directional, not causal.</li>
+  </ul>
+
+  <h2>Ranked recommendations — the action playbook</h2>
+  <p>The model's probability output feeds a four-tier reason-code system:</p>
+  <table>
+    <tr><th>Reason code</th><th>Action</th><th>Trigger</th></tr>
+    <tr><td><span class="reason-code">stale_high_risk</span></td><td>Refresh</td><td>Model score ≥ 0.65 and inactive 30+ days</td></tr>
+    <tr><td><span class="reason-code">model_flagged_risk</span></td><td>Review for refresh</td><td>Model score ≥ 0.65</td></tr>
+    <tr><td><span class="reason-code">ctr_gap_visible</span></td><td>Review metadata</td><td>Below-median CTR with 500+ impressions</td></tr>
+    <tr><td><span class="reason-code">monitor_low_priority</span></td><td>Monitor</td><td>Everything else</td></tr>
+  </table>
+  <div class="callout"><code>stale_high_risk</code> did not trigger for any page in this run's output — every sampled page showed <code>days_since_last_seen = 0</code>, confirming this feature carries almost no variance in a single-month slice. This is a disclosed limitation of the current feature set, not an error in the rule itself.</div>
+  <h3>Human review is required — no-go list</h3>
+  <ul>
+    <li>No automatic publishing, editing, or deleting of content based on this score alone.</li>
+    <li>No automatic reallocation of budget or reviewer time without human sign-off.</li>
+    <li>No external claim that a specific page "will" decline or recover — the output is a ranked probability, not a guarantee.</li>
+    <li><code>monitor_low_priority</code> means lower estimated risk, not zero risk.</li>
+  </ul>
+  <h3>Monitoring and retrain triggers</h3>
+  <p>Re-score monthly as new data lands. Retrain if the client mix shifts meaningfully from the validated 35/9 split, if Precision@50 on a fresh held-out month drops materially below 0.64, or at minimum quarterly, since seasonal drift is untested with only one month-pair validated so far.</p>
+
+  <h2>Reproducibility</h2>
+  <p>All notebooks, in order, are in <a href="https://github.com/meharalirajar060-codeee/Flyrank_Internship_ML_MAR/tree/main/work/notebooks">work/notebooks/</a> of the project repository:</p>
+  <ul>
+    <li><code>w01_research_question.ipynb</code> — lane selection and justification</li>
+    <li><code>w02_ml_task_framing.ipynb</code> — task type, target, and metric</li>
+    <li><code>w03_data_contract.ipynb</code> — data contract and first warehouse queries</li>
+    <li><code>w04_baseline_score.ipynb</code> — signal checks and baseline rule</li>
+    <li><code>w05_model.ipynb</code> — model training and baseline comparison</li>
+    <li><code>w06_validation_audit.ipynb</code> — honest-split audit and leakage check</li>
+    <li><code>w07_action_playbook.ipynb</code> — this paper's recommendations, in code</li>
+  </ul>
+  <p>Repository: <a href="https://github.com/meharalirajar060-codeee/Flyrank_Internship_ML_MAR">github.com/meharalirajar060-codeee/Flyrank_Internship_ML_MAR</a></p>
+
+  <div class="footer">
+    Built on the FlyRank ML Internship dataset — <a href="https://flyrank.ai">flyrank.ai</a>
+  </div>
+
+</div>
+</body>
+</html>
